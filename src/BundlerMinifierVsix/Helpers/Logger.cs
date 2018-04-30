@@ -15,6 +15,7 @@ namespace BundlerMinifierVsix
         {
             _provider = provider;
             _name = name;
+            EnsurePane();
         }
 
         [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "Microsoft.VisualStudio.Shell.Interop.IVsOutputWindowPane.OutputString(System.String)")]
@@ -25,7 +26,7 @@ namespace BundlerMinifierVsix
 
             try
             {
-                if (EnsurePane())
+                if (pane != null)
                 {
                     pane.OutputString(DateTime.Now.ToString() + ": " + message + Environment.NewLine);
                 }
@@ -46,15 +47,22 @@ namespace BundlerMinifierVsix
 
         private static bool EnsurePane()
         {
-            if (pane == null)
+            try
             {
-                Guid guid = Guid.NewGuid();
-                IVsOutputWindow output = (IVsOutputWindow)_provider.GetService(typeof(SVsOutputWindow));
-                output.CreatePane(ref guid, _name, 1, 1);
-                output.GetPane(ref guid, out pane);
-            }
+                if (pane == null)
+                {
+                    Guid guid = Guid.NewGuid();
+                    IVsOutputWindow output = (IVsOutputWindow)_provider.GetService(typeof(SVsOutputWindow));
+                    output.CreatePane(ref guid, _name, 1, 1);
+                    output.GetPane(ref guid, out pane);
+                }
 
-            return pane != null;
+                return pane != null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.Write(ex);
+            }
         }
     }
 }
